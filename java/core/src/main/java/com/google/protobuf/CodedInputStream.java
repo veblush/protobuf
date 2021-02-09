@@ -3484,9 +3484,26 @@ public abstract class CodedInputStream {
           return ByteString.wrap(bytes);
         }
       } else if (size > 0 && size <= remaining()) {
-        byte[] temp = new byte[size];
-        readRawBytesTo(temp, 0, size);
-        return ByteString.wrap(temp);
+        if (immutable && enableAliasing) {
+          ByteString ret = ByteString.EMPTY;
+          int l = size;
+          while (l > 0) {
+            if (currentRemaining() == 0) {
+              getNextByteBuffer();
+            }
+            int bytesToCopy = Math.min(l, (int) currentRemaining());
+            int idx = (int) (currentByteBufferPos - currentAddress);
+            ByteString chunk = ByteString.wrap(slice(idx, idx + bytesToCopy));
+            ret = ret.concat(chunk);
+            l -= bytesToCopy;
+            currentByteBufferPos += bytesToCopy;
+          }
+          return ret;
+        } else {
+          byte[] temp = new byte[size];
+          readRawBytesTo(temp, 0, size);
+          return ByteString.wrap(temp);
+        }
       }
 
       if (size == 0) {
