@@ -603,7 +603,8 @@ final class RopeByteString extends ByteString {
 
   @Override
   public CodedInputStream newCodedInput() {
-    return CodedInputStream.newInstance(new RopeInputStream());
+    // return CodedInputStream.newInstance(new RopeInputStream());
+    return CodedInputStream.newInstance(asReadOnlyByteBufferList(), /* bufferIsImmutable= */ true);
   }
 
   @Override
